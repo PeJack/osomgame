@@ -5,6 +5,7 @@
 package main
 
 import (
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -31,6 +32,9 @@ type connection struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	// Mutex connections.
+	mu sync.Mutex
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -56,18 +60,22 @@ func (c *connection) readPump() {
 
 // write writes a message with the given message type and payload.
 func (c *connection) write(mt int, payload []byte) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
 }
 
 // writePump pumps messages from the hub to the websocket connection.
 func (c *connection) writePump() {
+
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {
 		ticker.Stop()
 		c.ws.Close()
 	}()
+
 	for {
 		select {
 		case message, ok := <-c.send:

@@ -1,26 +1,40 @@
 var ws = null;
 var wsurl = "ws://127.0.0.1:8080/ws";
 var backend = undefined;
+var settings;
 
 window.onload = function() {
 
     ws = new WebSocket(wsurl);
 
     backend = new Backend(ws);
+
+    backend.register("getSettings", function(resp) {
+        settings = resp.Settings;
+        for(var k in resp.Platforms) {
+            p = resp.Platforms[k];
+            platforms.push(new Platform(p.Id, p.Pos, p.Width, p.Height))
+        }
+
+        init();
+    })
+
     backend.register("register", function(resp) {
         var p = resp.Player;
 
         if (player == undefined) {
-            player = new Player(p.Id, p.Pos, p.Size, p.Speed);
+            player = new Player(p.Id, p.Pos, p.Width, p.Height, p.Speed);
+            input = new Input;
         }
 
         for(var k in resp.Players) {
             p = resp.Players[k];
             
             if(p.Id != player.id) {
-                players.push(new Player(p.Id, p.Pos, p.Size, p.Speed));
+                players.push(new Player(p.Id, p.Pos, p.Width, p.Height, p.Speed));
             }
         }
+        gameLoop();
     });
 
     backend.register("move", function(resp) {
@@ -63,46 +77,46 @@ window.onload = function() {
         }
     });
 
-    canvas = document.createElement("canvas");
-    canvas.style.cssText = "border:1px solid #000000;";
-    context = canvas.getContext("2d");
-
-    canvas.width = 600;
-    canvas.height = 400;
-    document.body.appendChild(canvas);
-
-    chatWindow = document.createElement("div");
-    chatWindow.id = "chat-window";
-    chatWindow.style.cssText = "width:600px;height:100px;overflow-y:scroll";
-    document.body.appendChild(chatWindow);
-
-    chatForm = document.createElement("form");
-    chatForm.id = "chat-form";
-
-    chatInput = document.createElement("input");
-    chatInput.id = "chat-input";
-    chatInput.style.cssText = "width:600px;";
-    chatInput.type = "text";
-
-    chatForm.appendChild(chatInput);
-    document.body.appendChild(chatForm);
-
-    p = new Player(0, [20, 20], 100, 4)
-
     backend.onOpen = function() {
-        backend.send('register', 'player', p);
-
-        gameLoop();
+        backend.send('getSettings');
+        backend.send('register');
     }
 
-    chatForm.onsubmit = function(e){
-        e.preventDefault();
-        message = new Message(0, chatInput.value, player.id, + new Date())
+    function init() {
+        canvas = document.createElement("canvas");
+        canvas.style.cssText = "border:1px solid #000000;";
+        context = canvas.getContext("2d");
 
-        backend.send('sendMsgToChat', 'message', message);
-        chatInput.value = null;     
-        chatInput.blur();
+        canvas.width = settings.canvasWidth;
+        canvas.height = settings.canvasHeight;
+        document.body.appendChild(canvas);
+
+        chatWindow = document.createElement("div");
+        chatWindow.id = "chat-window";
+        chatWindow.style.cssText = "width:600px;height:100px;overflow-y:scroll";
+        document.body.appendChild(chatWindow);
+
+        chatForm = document.createElement("form");
+        chatForm.id = "chat-form";
+
+        chatInput = document.createElement("input");
+        chatInput.id = "chat-input";
+        chatInput.style.cssText = "width:600px;";
+        chatInput.type = "text";
+
+        chatForm.appendChild(chatInput);
+        document.body.appendChild(chatForm);
+
+        chatForm.onsubmit = function(e){
+            e.preventDefault();
+            message = new Message(0, chatInput.value, player.id, + new Date())
+
+            backend.send('sendMsgToChat', 'message', message);
+            chatInput.value = null;     
+            chatInput.blur();
+        }
     }
+
 };
 
 window.onbeforeunload = function() {
@@ -135,12 +149,15 @@ function Backend(ws) {
 Backend.prototype.onOpen = function(){}
 Backend.prototype.onClose = function(){}
 
-Backend.prototype.send = function(method, entityType, entity) {
+Backend.prototype.send = function(method, entityType = null, entity = null) {
     var request = {
         method: method,
     };
 
-    request[entityType] = entity;
+    if(entityType) {
+        request[entityType] = entity;
+    };
+
     jsonRequest = JSON.stringify(request);
     console.log("Request: ", jsonRequest);
     ws.send(jsonRequest);
