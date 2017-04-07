@@ -1,8 +1,9 @@
 // Player - игрок
 class Player {
-    constructor(id, pos, width, height, speed) {
+    constructor(id, x, y, width, height, speed) {
         this.id = id;
-        this.pos = pos;
+        this.x = x;
+        this.y = y;
         this.width = width || 20;
         this.height = height || 20;       
         this.speed = speed || 4;
@@ -18,7 +19,7 @@ class Player {
 
     draw(context) {
         context.beginPath();
-        context.rect(this.pos[0], this.pos[1], this.width, this.height);
+        context.rect(this.x, this.y, this.width, this.height);
         context.fillStyle = 'yellow';
         context.fill();
         context.lineWidth = 7;
@@ -26,7 +27,7 @@ class Player {
         context.stroke();
         context.font = '24px Arial';  
         context.fillStyle = 'black';  
-        context.fillText(this.id, this.pos[0] - this.width/5, this.pos[1] - 10);        
+        context.fillText(this.id, this.x - this.width/5, this.y - 10);        
     }
 
     update(backend) {
@@ -35,8 +36,8 @@ class Player {
 
     collide(obj) {
         // получение векторов из позиций
-        let vX = (this.pos[0] + (this.width / 2)) - (obj.pos[0] + (obj.width / 2)),
-            vY = (this.pos[1] + (this.height / 2)) - (obj.pos[1] + (obj.height / 2)),
+        let vX = (this.x + (this.width / 2)) - (obj.x + (obj.width / 2)),
+            vY = (this.y + (this.height / 2)) - (obj.y + (obj.height / 2)),
             hWidths = (this.width / 2) + (obj.width / 2),
             hHeights = (this.height / 2) + (obj.height / 2),
             colDir = null;
@@ -48,18 +49,18 @@ class Player {
             if (oX >= oY) {
                 if (vY > 0) {
                     colDir = "top";
-                    this.pos[1] += oY;
+                    this.y += oY;
                 } else {
                     colDir = "bottom";
-                    this.pos[1] -= oY;
+                    this.y -= oY;
                 }
             } else {
                 if (vX > 0) {
                     colDir = "left";
-                    this.pos[0] += oX;
+                    this.x += oX;
                 } else {
                     colDir = "right";
-                    this.pos[0] -= oX;
+                    this.x -= oX;
                 }
             }
         }

@@ -1,0 +1,8 @@
+hash: 0e607a99a5c19d4588589739b2c0c8eac1730b5f53b52affd479095d9f8d22ff
+updated: 2017-04-04T21:24:02.596513408+03:00
+imports:
+- name: github.com/bitly/go-simplejson
+  version: aabad6e819789e569bd6aabf444c935aa9ba1e44
+- name: github.com/gorilla/websocket
+  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
+testImports: []

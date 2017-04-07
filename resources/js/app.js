@@ -1,7 +1,7 @@
 var ws = null;
 var wsurl = "ws://127.0.0.1:8080/ws";
 var backend = undefined;
-var settings;
+var settings = {};
 
 window.onload = function() {
 
@@ -10,46 +10,33 @@ window.onload = function() {
     backend = new Backend(ws);
 
     backend.register("getSettings", function(resp) {
-        settings = resp.Settings;
-        for(var k in resp.Platforms) {
-            p = resp.Platforms[k];
-            platforms.push(new Platform(p.Id, p.Pos, p.Width, p.Height))
+        for(var k in resp) {
+            settings[k] = resp[k];
         }
 
         init();
     })
 
     backend.register("register", function(resp) {
-        var p = resp.Player;
+        if(player === undefined) {
+            p = resp.player;
+            player = new Player(p.ID, p.X, p.Y, p.Width, p.Height, p.Speed)
 
-        if (player == undefined) {
-            player = new Player(p.Id, p.Pos, p.Width, p.Height, p.Speed);
-            input = new Input;
+            players[player.id] = player;
         }
 
-        for(var k in resp.Players) {
-            p = resp.Players[k];
-            
-            if(p.Id != player.id) {
-                players.push(new Player(p.Id, p.Pos, p.Width, p.Height, p.Speed));
-            }
-        }
         gameLoop();
     });
 
     backend.register("move", function(resp) {
-        var p = resp.Player;
-
-        if (player == undefined || p.Id == player.id) {
+        if (player == undefined || resp.id == player.id) {
             return;
         }
-
-        for (var i = 0; i < players.length; i++) {
-            if (players[i].id == p.Id) {
-                players[i].pos = p.Pos;
-                players[i].speed = p.Speed;
-            }
-        }
+        p = players[resp.id];
+        if (!p) { return };
+        p.x = resp.x;
+        p.y = resp.y;
+        p.speed = resp.speed; 
     });
 
     backend.register("sendMsgToChat", function(resp) {
@@ -69,10 +56,25 @@ window.onload = function() {
     });
 
     backend.register("gameState", function(resp) {
+        for(var k in resp.platforms) {
+            p = resp.platforms[k];
+
+            if(!platforms[k]) {
+                platforms[k] = new Platform(p.ID, p.X, p.Y, p.Width, p.Height);
+            }
+        }
+
         for(var k in players) {
-            if(players[k].id == resp.Player.Id) {                
-                players.splice(k, 1);      
-                break;
+            if(!resp.players[k]) {
+                delete players[k];
+            }
+        }
+
+        for(var k in resp.players) {
+            p = resp.players[k];
+
+            if(!players[k]) {
+                players[k] = new Player(p.ID, p.X, p.Y, p.Width, p.Height, p.Speed)
             }
         }
     });
@@ -115,6 +117,8 @@ window.onload = function() {
             chatInput.value = null;     
             chatInput.blur();
         }
+
+        input = new Input;
     }
 
 };
@@ -168,5 +172,5 @@ Backend.prototype.register = function(method, callback) {
 }
 
 Backend.prototype.process = function(data) {
-    this.callbacks[data.Method](data)
+    this.callbacks[data.method](data.message)
 }

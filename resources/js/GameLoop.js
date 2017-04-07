@@ -10,9 +10,9 @@ var context;
 var player;
 var input;
 
-var players = [];
-var messages = [];
-var platforms = [];
+var players = {};
+var messages = {};
+var platforms = {};
 
 function gameLoop() {
     update();
@@ -28,12 +28,12 @@ function draw() {
         player.draw(context);
     }
 
-    for (var i = 0; i < players.length; i++) {
-        players[i].draw(context);
+    for(var k in players) {
+        players[k].draw(context);
     }
 
-    for (var i = 0; i < platforms.length; i++) {
-        platforms[i].draw(context);
+    for(var k in platforms) {
+        platforms[k].draw(context);
     }
 
 }
@@ -53,7 +53,7 @@ function handleInput() {
 
     if (input.isDown('DOWN') || input.isDown('s')) {
         player.isMoved = true;
-        player.pos[1] += player.speed;
+        player.y += player.speed;
     }
 
     if (input.isDown('UP') || input.isDown('w')) {
@@ -85,8 +85,8 @@ function handleInput() {
 function collisionCheck() {
     player.isGrounded = false;
 
-    for (var i = 0; i < platforms.length; i++) {
-        var platform = platforms[i];
+    for (var k in platforms) {
+        var platform = platforms[k];
 
         var colDir = player.collide(platform);   
         if (colDir === "left" || colDir === "right") {
@@ -104,6 +104,6 @@ function collisionCheck() {
          player.velY = 0;
     }
     
-    player.pos[0] += player.velX;
-    player.pos[1] += player.velY;
+    player.x += player.velX;
+    player.y += player.velY;
 }
