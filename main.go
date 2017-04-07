@@ -1,14 +1,34 @@
+// TODO:
+// 1) пофиксить баг с вылетом сервера при конкурентном вызове writePump (sync.mutex)
+// 2) перестроить данные ответа (response)
+
 package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"log"
 
 	"github.com/gorilla/websocket"
 )
+
+const (
+	canvasWidth  = 600
+	canvasHeight = 400
+	friction     = 0.8
+	gravity      = 0.3
+)
+
+var players = make(map[int32]*player)
+var platforms = make([]*platform, 0, 10)
+var settings = make(map[string]string)
+
+var lastPlayerId int32 = 1
+var lastMsgId int32 = 1
+var lastPlatformId int32 = 1
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -31,37 +51,113 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	c.readPump()
 }
 
-var players = make(map[int32]*player)
-var lastPlayerId int32 = 1
-var lastMsgId int32 = 1
-
 func main() {
-	router.Add("register", func(data interface{}, c *connection) {
-		request := data.(*Request)
-		player := request.Player
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{0, 0},
+		Width:  10,
+		Height: canvasHeight,
+	})
+	lastPlatformId++
 
-		if player.Id == 0 {
-			player.Id = lastPlayerId
-			lastPlayerId++
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{0, canvasHeight - 2},
+		Width:  canvasWidth,
+		Height: 50,
+	})
+	lastPlatformId++
 
-			player.c = c
-			players[player.Id] = &player
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{canvasWidth - 10, 0},
+		Width:  50,
+		Height: canvasHeight,
+	})
+	lastPlatformId++
 
-			response := Response{
-				Method:  "register",
-				Player:  player,
-				Players: players,
-			}
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{60, 90},
+		Width:  80,
+		Height: 80,
+	})
+	lastPlatformId++
 
-			resp, err := json.Marshal(response)
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{170, 190},
+		Width:  80,
+		Height: 80,
+	})
+	lastPlatformId++
 
-			if err != nil {
-				fmt.Errorf("Error marshal response %v\n", err)
-				return
-			}
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{350, 230},
+		Width:  80,
+		Height: 80,
+	})
+	lastPlatformId++
 
-			h.broadcast <- resp
+	platforms = append(platforms, &platform{
+		Id:     lastPlatformId,
+		Pos:    []int32{550, 300},
+		Width:  40,
+		Height: 100,
+	})
+	lastPlatformId++
+
+	router.Add("getSettings", func(data interface{}, c *connection) {
+		settings["canvasWidth"] = strconv.Itoa(canvasWidth)
+		settings["canvasHeight"] = strconv.Itoa(canvasHeight)
+		settings["friction"] = fmt.Sprintf("%.1f", friction)
+		settings["gravity"] = fmt.Sprintf("%.1f", gravity)
+
+		response := Response{
+			Method:    "getSettings",
+			Platforms: platforms,
+			Settings:  settings,
 		}
+
+		resp, err := json.Marshal(response)
+		if err != nil {
+			fmt.Errorf("Error marshal response %v\n", err)
+			return
+		}
+
+		// h.broadcast <- resp
+		c.send <- resp
+
+		fmt.Printf("Send settings to client\n")
+
+	})
+
+	router.Add("register", func(data interface{}, c *connection) {
+		player := &player{
+			Id:     lastPlayerId,
+			Pos:    []float32{20.0, 20.0},
+			Width:  20,
+			Height: 20,
+		}
+
+		lastPlayerId++
+		player.c = c
+
+		players[player.Id] = player
+		response := Response{
+			Method:  "register",
+			Player:  *player,
+			Players: players,
+		}
+
+		resp, err := json.Marshal(response)
+		if err != nil {
+			fmt.Errorf("Error marshal response %v\n", err)
+			return
+		}
+
+		h.broadcast <- resp
 
 		fmt.Printf("Connection opened: %v\n", player)
 	})
@@ -75,9 +171,9 @@ func main() {
 			Player: player,
 		}
 
-		if players[player.Id] != nil {
-			players[player.Id] = &player
-		}
+        //if players[player.Id] != nil {
+		//	players[player.Id] = &player
+		// }
 
 		resp, err := json.Marshal(response)
 
@@ -138,8 +234,11 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("./resources")))
 	http.HandleFunc("/ws", handler)
 
+	fmt.Print("Server started at port :8080\n")
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+
 }
