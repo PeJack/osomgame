@@ -7,8 +7,8 @@
 export class GameLoop {
     constructor(canvas, context, input, backend, db, settings) {
         this.backend = backend;
-        this.canvas = canvas;
-        this.context = context;
+        this.canvas = document.getElementById("gameWindow");
+        this.context = this.canvas.getContext("2d");
         this.input = input;
         this.settings = settings;
 
@@ -22,13 +22,13 @@ export class GameLoop {
                 this.db.player.draw(this.context);
             }
 
-            this.db.players.forEach((player) => {
-                player.draw(this.context);
-            });
+            for(let id in this.db.players) {
+                this.db.players[id].draw(context);
+            }
 
-            this.db.platforms.forEach((platform) => {
-                platform.draw(this.context);
-            });
+            for(let id in this.db.platforms) {
+                this.db.platforms[id].draw(context);
+            }
         };
 
         this.update = () => {
@@ -53,7 +53,7 @@ export class GameLoop {
 
             if (this.input.isDown('DOWN') || this.input.isDown('s')) {
                 this.db.player.isMoved = true;
-                this.db.player.pos[1] += this.db.player.speed;
+                this.db.player.y += this.db.player.speed;
             }
 
             if (this.input.isDown('UP') || this.input.isDown('w')) {
@@ -85,8 +85,8 @@ export class GameLoop {
         this.collisionCheck = () => {
             this.db.player.isGrounded = false;
 
-            for (let i = 0; i < this.db.platforms.length; i++) {
-                let platform = this.db.platforms[i];
+            for(let id in this.db.platforms) {
+                let platform = this.db.platforms[id];
 
                 let colDir = this.db.player.collide(platform);
                 if (colDir === "left" || colDir === "right") {
@@ -104,8 +104,8 @@ export class GameLoop {
                 this.db.player.velY = 0;
             }
 
-            this.db.player.pos[0] += this.db.player.velX;
-            this.db.player.pos[1] += this.db.player.velY;
+            this.db.player.x += this.db.player.velX;
+            this.db.player.y += this.db.player.velY;
         };
 
         this.gameLoop();

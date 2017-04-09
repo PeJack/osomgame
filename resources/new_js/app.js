@@ -4,6 +4,10 @@ import {Canvas} from './graph/canvas';
 import {GameLoop} from './GameLoop';
 import {Player} from './entities/Player';
 
+window.onbeforeunload = function() {
+    window.backend.beforeUnloaded();
+};
+
 class Backend {
     constructor(ws, wsurl, player) {
         this.player = player;
@@ -17,7 +21,7 @@ class Backend {
         };
 
         this.ws.onclose = (e) => {
-            this.onClose();
+            this.beforeUnloaded();
             console.log("connection closed (" + e.code + ")");
         };
 
@@ -46,7 +50,8 @@ class Backend {
     };
 
     process(data) {
-        this.callbacks[data.Method](data)
+        if(data == 9) { return; }
+        this.callbacks[data.method](data.message)
     };
 
     beforeUnloaded() {
@@ -57,13 +62,10 @@ class Backend {
         this.send('getSettings');
         this.send('register');
     };
-
-    onClose() {
-    };
+    
 }
-
 export class MainApp {
-
+    
     constructor(db) {
         this.db = db;
         this.wsurl = "ws://127.0.0.1:8080/ws";
@@ -76,7 +78,7 @@ export class MainApp {
 
         //Сервис управления сокетами
         this.backend = null;
-        this.settings = null;
+        this.settings = {};
 
         //Класс для отрисовки картинки нашего изображения
         this.gameLoop = null;
@@ -88,13 +90,12 @@ export class MainApp {
         this.ws = new WebSocket(this.wsurl);
 
         this.backend = new Backend(this.ws, this.wsurl, this.db.player);
+        window.backend = this.backend;    
 
         this.backend.register("getSettings", (resp) => {
-            this.settings = resp.Settings;
-
-            resp.Platforms.forEach((platform) => {
-                this.db.addPlatform(new Platform(platform.Id, platform.Pos, platform.Width, platform.Height));
-            });
+            for(let k in resp) {
+                this.settings[k] = resp[k];
+            }
 
             this.init();
         });
@@ -102,27 +103,17 @@ export class MainApp {
         this.backend.register("register", (resp) => {
 
             if (!this.db.player) {
-                this.db.setPlayer(new Player(
-                    resp.Player.Id,
-                    resp.Player.Pos,
-                    resp.Player.Width,
-                    resp.Player.Height,
-                    resp.Player.Speed
-                ));
-
+                let p = new Player(
+                    resp.player.ID,
+                    resp.player.X,
+                    resp.player.Y,
+                    resp.player.Width,
+                    resp.player.Height,
+                    resp.player.Speed
+                )
+                
+                this.db.setPlayer(p);
                 this.input = new Input();
-            }
-
-            if (resp.Player.Id != this.db.player.id) {
-                this.db.addPlayer(
-                    new Player(
-                        resp.Player.Id,
-                        resp.Player.Pos,
-                        resp.Player.Width,
-                        resp.Player.Height,
-                        resp.Player.Speed
-                    )
-                );
             }
 
             this.gameLoop = new GameLoop(
@@ -136,18 +127,16 @@ export class MainApp {
         });
 
         this.backend.register("move", (resp) => {
-            let p = resp.Player;
-
-            if (this.db.player == undefined || p.Id == this.db.player.id) {
+            if (this.db.player == undefined || resp.id == this.db.player.id) {
                 return;
             }
 
-            this.db.players.forEach((player) => {
-                if (player.id == p.Id) {
-                    player.pos = p.Pos;
-                    player.speed = p.Speed;
-                }
-            });
+            let p = this.db.players[resp.id];
+            if (!p) { return };
+
+            p.x = resp.x;
+            p.y = resp.y;
+            p.speed = resp.speed; 
         });
 
         this.backend.register("sendMsgToChat", (resp) => {
@@ -168,10 +157,24 @@ export class MainApp {
         });
 
         this.backend.register("gameState", (resp) => {
-            for (let k in this.db.players) {
-                if (this.db.players[k].id == resp.Player.Id) {
-                    this.db.removePlayer(k);
-                    break;
+            for(let id in resp.platforms) {
+                let p = resp.platforms[id];
+
+                if(!this.db.platforms[id]) {
+                    this.db.addPlatform(id, new Platform(p.ID, p.X, p.Y, p.Width, p.Height)); 
+                }
+            };
+
+            for (let id in this.db.players) {
+                if(!resp.players[id]) {
+                    this.db.removePlayer(id);
+                }
+            }
+
+            for(let id in resp.players) {
+                let p = resp.players[id];
+                if(!this.db.players[id] && this.db.player.id != p.ID) {
+                    this.db.addPlayer(id, new Player(p.ID, p.X, p.Y, p.Width, p.Height, p.Speed));
                 }
             }
         });

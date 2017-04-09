@@ -92,6 +92,10 @@ var _Player = __webpack_require__(5);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+window.onbeforeunload = function () {
+    window.backend.beforeUnloaded();
+};
+
 var Backend = function () {
     function Backend(ws, wsurl, player) {
         var _this = this;
@@ -109,7 +113,7 @@ var Backend = function () {
         };
 
         this.ws.onclose = function (e) {
-            _this.onClose();
+            _this.beforeUnloaded();
             console.log("connection closed (" + e.code + ")");
         };
 
@@ -145,7 +149,10 @@ var Backend = function () {
     }, {
         key: 'process',
         value: function process(data) {
-            this.callbacks[data.Method](data);
+            if (data == 9) {
+                return;
+            }
+            this.callbacks[data.method](data.message);
         }
     }, {
         key: 'beforeUnloaded',
@@ -158,9 +165,6 @@ var Backend = function () {
             this.send('getSettings');
             this.send('register');
         }
-    }, {
-        key: 'onClose',
-        value: function onClose() {}
     }]);
 
     return Backend;
@@ -181,7 +185,7 @@ var MainApp = exports.MainApp = function () {
 
         //Сервис управления сокетами
         this.backend = null;
-        this.settings = null;
+        this.settings = {};
 
         //Класс для отрисовки картинки нашего изображения
         this.gameLoop = null;
@@ -197,13 +201,12 @@ var MainApp = exports.MainApp = function () {
             this.ws = new WebSocket(this.wsurl);
 
             this.backend = new Backend(this.ws, this.wsurl, this.db.player);
+            window.backend = this.backend;
 
             this.backend.register("getSettings", function (resp) {
-                _this2.settings = resp.Settings;
-
-                resp.Platforms.forEach(function (platform) {
-                    _this2.db.addPlatform(new _Platform.Platform(platform.Id, platform.Pos, platform.Width, platform.Height));
-                });
+                for (var _k in resp) {
+                    _this2.settings[_k] = resp[_k];
+                }
 
                 _this2.init();
             });
@@ -211,31 +214,28 @@ var MainApp = exports.MainApp = function () {
             this.backend.register("register", function (resp) {
 
                 if (!_this2.db.player) {
-                    _this2.db.setPlayer(new _Player.Player(resp.Player.Id, resp.Player.Pos, resp.Player.Width, resp.Player.Height, resp.Player.Speed));
+                    var p = new _Player.Player(resp.player.ID, resp.player.X, resp.player.Y, resp.player.Width, resp.player.Height, resp.player.Speed);
 
+                    _this2.db.setPlayer(p);
                     _this2.input = new _Input.Input();
-                }
-
-                if (resp.Player.Id != _this2.db.player.id) {
-                    _this2.db.addPlayer(new _Player.Player(resp.Player.Id, resp.Player.Pos, resp.Player.Width, resp.Player.Height, resp.Player.Speed));
                 }
 
                 _this2.gameLoop = new _GameLoop.GameLoop(_this2.canvas, _this2.canvas.context, _this2.input, _this2.backend, _this2.db, _this2.settings);
             });
 
             this.backend.register("move", function (resp) {
-                var p = resp.Player;
-
-                if (_this2.db.player == undefined || p.Id == _this2.db.player.id) {
+                if (_this2.db.player == undefined || resp.id == _this2.db.player.id) {
                     return;
                 }
 
-                _this2.db.players.forEach(function (player) {
-                    if (player.id == p.Id) {
-                        player.pos = p.Pos;
-                        player.speed = p.Speed;
-                    }
-                });
+                var p = _this2.db.players[resp.id];
+                if (!p) {
+                    return;
+                };
+
+                p.x = resp.x;
+                p.y = resp.y;
+                p.speed = resp.speed;
             });
 
             this.backend.register("sendMsgToChat", function (resp) {
@@ -256,10 +256,24 @@ var MainApp = exports.MainApp = function () {
             });
 
             this.backend.register("gameState", function (resp) {
-                for (var _k in _this2.db.players) {
-                    if (_this2.db.players[_k].id == resp.Player.Id) {
-                        _this2.db.removePlayer(_k);
-                        break;
+                for (var id in resp.platforms) {
+                    var p = resp.platforms[id];
+
+                    if (!_this2.db.platforms[id]) {
+                        _this2.db.addPlatform(id, new _Platform.Platform(p.ID, p.X, p.Y, p.Width, p.Height));
+                    }
+                };
+
+                for (var _id in _this2.db.players) {
+                    if (!resp.players[_id]) {
+                        _this2.db.removePlayer(_id);
+                    }
+                }
+
+                for (var _id2 in resp.players) {
+                    var _p = resp.players[_id2];
+                    if (!_this2.db.players[_id2] && _this2.db.player.id != _p.ID) {
+                        _this2.db.addPlayer(_id2, new _Player.Player(_p.ID, _p.X, _p.Y, _p.Width, _p.Height, _p.Speed));
                     }
                 }
             });
@@ -296,15 +310,15 @@ var db = exports.db = function () {
         this.message = undefined;
         this.player = undefined;
 
-        this.messages = [];
-        this.players = [];
-        this.platforms = [];
+        this.messages = {};
+        this.players = {};
+        this.platforms = {};
     }
 
     _createClass(db, [{
         key: "addMessage",
-        value: function addMessage(message) {
-            this.messages.push(message);
+        value: function addMessage(id, message) {
+            this.messages[id] = message;
         }
     }, {
         key: "removeMessage",
@@ -318,23 +332,23 @@ var db = exports.db = function () {
         }
     }, {
         key: "addPlayer",
-        value: function addPlayer(player) {
-            this.players.push(player);
+        value: function addPlayer(id, player) {
+            this.players[id] = player;
         }
     }, {
         key: "removePlayer",
-        value: function removePlayer(i) {
-            this.players.splice(i, 1);
+        value: function removePlayer(id) {
+            delete this.players[id];
         }
     }, {
         key: "addPlatform",
-        value: function addPlatform(platform) {
-            this.platforms.push(platform);
+        value: function addPlatform(id, platform) {
+            this.platforms[id] = platform;
         }
     }, {
         key: "removePlatform",
-        value: function removePlatform(i) {
-            this.platforms.splice(i, 1);
+        value: function removePlatform(id) {
+            delete this.platforms[id];
         }
     }, {
         key: "getDb",
@@ -371,8 +385,8 @@ var GameLoop = exports.GameLoop = function GameLoop(canvas, context, input, back
     _classCallCheck(this, GameLoop);
 
     this.backend = backend;
-    this.canvas = canvas;
-    this.context = context;
+    this.canvas = document.getElementById("gameWindow");
+    this.context = this.canvas.getContext("2d");
     this.input = input;
     this.settings = settings;
 
@@ -386,13 +400,13 @@ var GameLoop = exports.GameLoop = function GameLoop(canvas, context, input, back
             _this.db.player.draw(_this.context);
         }
 
-        _this.db.players.forEach(function (player) {
-            player.draw(_this.context);
-        });
+        for (var id in _this.db.players) {
+            _this.db.players[id].draw(context);
+        }
 
-        _this.db.platforms.forEach(function (platform) {
-            platform.draw(_this.context);
-        });
+        for (var _id in _this.db.platforms) {
+            _this.db.platforms[_id].draw(context);
+        }
     };
 
     this.update = function () {
@@ -417,7 +431,7 @@ var GameLoop = exports.GameLoop = function GameLoop(canvas, context, input, back
 
         if (_this.input.isDown('DOWN') || _this.input.isDown('s')) {
             _this.db.player.isMoved = true;
-            _this.db.player.pos[1] += _this.db.player.speed;
+            _this.db.player.y += _this.db.player.speed;
         }
 
         if (_this.input.isDown('UP') || _this.input.isDown('w')) {
@@ -449,8 +463,8 @@ var GameLoop = exports.GameLoop = function GameLoop(canvas, context, input, back
     this.collisionCheck = function () {
         _this.db.player.isGrounded = false;
 
-        for (var i = 0; i < _this.db.platforms.length; i++) {
-            var platform = _this.db.platforms[i];
+        for (var id in _this.db.platforms) {
+            var platform = _this.db.platforms[id];
 
             var colDir = _this.db.player.collide(platform);
             if (colDir === "left" || colDir === "right") {
@@ -468,8 +482,8 @@ var GameLoop = exports.GameLoop = function GameLoop(canvas, context, input, back
             _this.db.player.velY = 0;
         }
 
-        _this.db.player.pos[0] += _this.db.player.velX;
-        _this.db.player.pos[1] += _this.db.player.velY;
+        _this.db.player.x += _this.db.player.velX;
+        _this.db.player.y += _this.db.player.velY;
     };
 
     this.gameLoop();
@@ -515,11 +529,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 // Platform - физические платформы, по которым перемещается игрок
 var Platform = exports.Platform = function () {
-    function Platform(id, pos, width, height) {
+    function Platform(id, x, y, width, height) {
         _classCallCheck(this, Platform);
 
         this.id = id;
-        this.pos = pos;
+        this.x = x;
+        this.y = y;
         this.width = width;
         this.height = height;
     }
@@ -528,7 +543,7 @@ var Platform = exports.Platform = function () {
         key: 'draw',
         value: function draw(context) {
             context.beginPath();
-            context.rect(this.pos[0], this.pos[1], this.width, this.height);
+            context.rect(this.x, this.y, this.width, this.height);
             context.fillStyle = 'black';
             context.fill();
             context.lineWidth = 1;
@@ -556,11 +571,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 // Player - игрок
 var Player = exports.Player = function () {
-    function Player(id, pos, width, height, speed) {
+    function Player(id, x, y, width, height, speed) {
         _classCallCheck(this, Player);
 
         this.id = id;
-        this.pos = pos;
+        this.x = x;
+        this.y = y;
         this.width = width || 20;
         this.height = height || 20;
         this.speed = speed || 4;
@@ -579,7 +595,7 @@ var Player = exports.Player = function () {
         value: function draw(context) {
             context.beginPath();
 
-            context.rect(this.pos[0], this.pos[1], this.width, this.height);
+            context.rect(this.x, this.y, this.width, this.height);
 
             context.fillStyle = 'yellow';
             context.fill();
@@ -590,7 +606,7 @@ var Player = exports.Player = function () {
 
             context.font = '24px Arial';
             context.fillStyle = 'black';
-            context.fillText(this.id, this.pos[0] - this.width / 5, this.pos[1] - 10);
+            context.fillText(this.id, this.x - this.width / 5, this.y - 10);
         }
     }, {
         key: 'update',
@@ -601,8 +617,8 @@ var Player = exports.Player = function () {
         key: 'collide',
         value: function collide(obj) {
             // получение векторов из позиций
-            var vX = this.pos[0] + this.width / 2 - (obj.pos[0] + obj.width / 2),
-                vY = this.pos[1] + this.height / 2 - (obj.pos[1] + obj.height / 2),
+            var vX = this.x + this.width / 2 - (obj.x + obj.width / 2),
+                vY = this.y + this.height / 2 - (obj.y + obj.height / 2),
                 hWidths = this.width / 2 + obj.width / 2,
                 hHeights = this.height / 2 + obj.height / 2,
                 colDir = null;
@@ -614,18 +630,18 @@ var Player = exports.Player = function () {
                 if (oX >= oY) {
                     if (vY > 0) {
                         colDir = "top";
-                        this.pos[1] += oY;
+                        this.y += oY;
                     } else {
                         colDir = "bottom";
-                        this.pos[1] -= oY;
+                        this.y -= oY;
                     }
                 } else {
                     if (vX > 0) {
                         colDir = "left";
-                        this.pos[0] += oX;
+                        this.x += oX;
                     } else {
                         colDir = "right";
-                        this.pos[0] -= oX;
+                        this.x -= oX;
                     }
                 }
             }
@@ -665,6 +681,7 @@ var Canvas = exports.Canvas = function () {
         this.settings = settings;
 
         this.canvas = document.createElement("canvas");
+        this.canvas.id = "gameWindow";
         this.canvas.style.cssText = "border:1px solid #000000;";
         this.context = this.canvas.getContext("2d");
 

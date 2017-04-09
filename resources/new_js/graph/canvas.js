@@ -7,6 +7,7 @@ export class Canvas{
         this.settings = settings;
 
         this.canvas = document.createElement("canvas");
+        this.canvas.id = "gameWindow";
         this.canvas.style.cssText = "border:1px solid #000000;";
         this.context = this.canvas.getContext("2d");
 

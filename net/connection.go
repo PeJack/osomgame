@@ -82,9 +82,9 @@ func (c *Connection) Reader() {
 		Hub.unregister <- c
 	}()
 
-	c.ws.SetReadLimit(maxMessageSize)
-	c.ws.SetReadDeadline(time.Now().Add(pongWait))
-	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	// c.ws.SetReadLimit(maxMessageSize)
+	// c.ws.SetReadDeadline(time.Now().Add(pongWait))
+	// c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
 		_, message, err := c.ws.ReadMessage()
@@ -115,6 +115,7 @@ func (c *Connection) processMessage(msg *simplejson.Json) {
 
 // Close - ...
 func (c *Connection) Close() {
+
 	// Close send channel
 	close(c.send)
 

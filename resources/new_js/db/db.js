@@ -3,13 +3,13 @@ export class db {
         this.message = undefined;
         this.player = undefined;
 
-        this.messages = [];
-        this.players = [];
-        this.platforms = [];
+        this.messages = {};
+        this.players = {};
+        this.platforms = {};
     }
 
-    addMessage(message) {
-        this.messages.push(message);
+    addMessage(id, message) {
+        this.messages[id] = message;
     }
 
     removeMessage(message) {
@@ -20,20 +20,20 @@ export class db {
         this.player = player;
     }
 
-    addPlayer(player) {
-        this.players.push(player)
+    addPlayer(id, player) {
+        this.players[id] = player
     }
 
-    removePlayer(i) {
-        this.players.splice(i, 1)
+    removePlayer(id) {
+        delete this.players[id]
     }
 
-    addPlatform(platform) {
-        this.platforms.push(platform)
+    addPlatform(id, platform) {
+        this.platforms[id] = platform
     }
 
-    removePlatform(i) {
-        this.platforms.splice(i, 1)
+    removePlatform(id) {
+        delete this.platforms[id]
     }
 
     getDb(){
