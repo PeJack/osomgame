@@ -1,5 +1,5 @@
 // Input - система управления игрока
-class Input {
+export class Input {
     constructor() {
         this.pressedKeys = {};
         this.pressedMouse = false;
