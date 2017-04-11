@@ -1,12 +1,13 @@
 // Input - система управления игрока
 export class Input {
-    constructor() {
+    constructor(actionCreator) {
         this.pressedKeys = {};
         this.pressedMouse = false;
+        this.actionCreator = actionCreator;
 
         document.addEventListener('keydown', (e) => this.setKey(e, true));
         document.addEventListener('keyup', (e) => this.setKey(e, false));
-        
+
         window.addEventListener('blur', () => this.pressedKeys = {});
 
         window.addEventListener('mousedown', (e) => this.pressedMouse = true);
@@ -20,22 +21,31 @@ export class Input {
     isMouseDown() {
         return this.pressedMouse;
     }
-    
+
     setKey(event, status) {
         let code = event.keyCode;
         let key;
 
-        switch(code) {
+        switch (code) {
             case 32:
-                key = 'SPACE'; break;
+                key = 'SPACE';
+                break;
             case 37:
-                key = 'LEFT'; break;
+                key = 'LEFT';
+                this.actionCreator.createAction("LEFT",'','way');
+                break;
             case 38:
-                key = 'UP'; break;
+                key = 'UP';
+                this.actionCreator.createAction("UP",'','way');
+                break;
             case 39:
-                key = 'RIGHT'; break;
+                key = 'RIGHT';
+                this.actionCreator.createAction("RIGHT",'','way');
+                break;
             case 40:
-                key = 'DOWN'; break;
+                key = 'DOWN';
+                this.actionCreator.createAction("DOWN",'','way');
+                break;
             default:
                 // Convert ASCII codes to letters
                 key = String.fromCharCode(code);

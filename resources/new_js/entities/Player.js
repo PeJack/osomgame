@@ -1,6 +1,9 @@
+import Rx from 'rxjs/Rx';
+import 'rxjs/operator/map';
+
 // Player - игрок
 export class Player {
-    constructor(id, x, y, width, height, speed) {
+    constructor(id, x, y, width, height, speed, actionCreator) {
         this.id = id;
         this.x = x;
         this.y = y;
@@ -9,18 +12,19 @@ export class Player {
         this.speed = speed || 4;
         this.velX = 0;
         this.velY = 0;
+        this.actionCreator = actionCreator;
 
         // Состояния игрока
         this.isMoved = false;
 	    this.isJumping = false;
         this.isGrounded = false;
 	    this.isAlive = true;
+        this.way = null;
+        this.checkWay();
     }
 
     draw(context) {
         context.beginPath();
-
-
         context.rect(this.x, this.y, this.width, this.height);
 
         context.fillStyle = 'yellow';
@@ -33,6 +37,17 @@ export class Player {
         context.font = '24px Arial';  
         context.fillStyle = 'black';  
         context.fillText(this.id, this.x - this.width/5, this.y - 10);        
+    }
+
+    checkWay() {
+        console.log(this.actionCreator);
+        this.actionCreator.way.subscribe((way) => {
+            console.log(way)
+        })
+    }
+
+    animateWay() {
+        console.log(this.actionCreator);
     }
 
     update(backend) {
