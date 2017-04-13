@@ -3,8 +3,6 @@ import {Input} from './systems/Input';
 import {Canvas} from './graph/canvas';
 import {GameLoop} from './GameLoop';
 import {Player} from './entities/Player';
-import {ActionCreator} from './animation/action.creator';
-import {IndexReducer} from './animation/reducer/index.reducer';
 
 window.onbeforeunload = function() {
     window.backend.beforeUnloaded();
@@ -69,8 +67,6 @@ class Backend {
 export class MainApp {
     
     constructor(db) {
-        this.actionCreator = new ActionCreator(new IndexReducer());
-
         this.db = db;
         this.wsurl = "ws://127.0.0.1:8080/ws";
 
@@ -113,12 +109,11 @@ export class MainApp {
                     resp.player.Y,
                     resp.player.Width,
                     resp.player.Height,
-                    resp.player.Speed,
-                    this.actionCreator
-                );
+                    resp.player.Speed
+                )
                 
                 this.db.setPlayer(p);
-                this.input = new Input(this.actionCreator);
+                this.input = new Input();
             }
 
             this.gameLoop = new GameLoop(
@@ -137,7 +132,7 @@ export class MainApp {
             }
 
             let p = this.db.players[resp.id];
-            if (!p) { return }
+            if (!p) { return };
 
             p.x = resp.x;
             p.y = resp.y;
@@ -186,6 +181,6 @@ export class MainApp {
     }
 
     init() {
-        this.canvas = new Canvas(this.backend, this.settings, this.db.player, this.actionCreator);
+        this.canvas = new Canvas(this.backend, this.settings, this.db.player);
     }
 }

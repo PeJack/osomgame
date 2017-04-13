@@ -18,7 +18,7 @@ export class ActionCreator {
     }
 
     getWay(direction) {
-        return Rx.Observable.create((obse§rver) => {
+        return Rx.Observable.create((observer) => {
             observer.next(direction);
             observer.complete();
         });

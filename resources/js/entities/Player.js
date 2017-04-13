@@ -1,5 +1,5 @@
 // Player - игрок
-export class Player {
+class Player {
     constructor(id, x, y, width, height, speed) {
         this.id = id;
         this.x = x;
@@ -19,17 +19,12 @@ export class Player {
 
     draw(context) {
         context.beginPath();
-
-
         context.rect(this.x, this.y, this.width, this.height);
-
         context.fillStyle = 'yellow';
         context.fill();
-
         context.lineWidth = 7;
         context.strokeStyle = 'black';
         context.stroke();
-
         context.font = '24px Arial';  
         context.fillStyle = 'black';  
         context.fillText(this.id, this.x - this.width/5, this.y - 10);        
