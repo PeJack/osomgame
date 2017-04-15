@@ -2,8 +2,9 @@ package net
 
 import (
 	"fmt"
-	"project/entities"
 	"time"
+
+	"github.com/osomgame/entities"
 
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/websocket"

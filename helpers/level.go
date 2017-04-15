@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"project/args"
-	"project/entities"
+	"github.com/osomgame/args"
+	"github.com/osomgame/entities"
 )
 
 // LevelHelper - хелпер для создания уровней

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"project/helpers"
+
+	"github.com/osomgame/helpers"
 
 	"github.com/gorilla/websocket"
 )

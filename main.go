@@ -7,8 +7,8 @@
 package main
 
 import (
-	"project/args"
-	"project/net"
+	"github.com/osomgame/args"
+	"github.com/osomgame/net"
 )
 
 func main() {

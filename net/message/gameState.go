@@ -1,7 +1,7 @@
 package message
 
 import (
-	"project/entities"
+	"github.com/osomgame/entities"
 
 	"github.com/bitly/go-simplejson"
 )

@@ -2,12 +2,13 @@ package net
 
 import (
 	"fmt"
-	"project/entities"
+
+	"github.com/osomgame/entities"
 
 	simplejson "github.com/bitly/go-simplejson"
 
-	"project/args"
-	netmsg "project/net/message"
+	"github.com/osomgame/args"
+	netmsg "github.com/osomgame/net/message"
 )
 
 // GenerateRoutes - генерирует пути для запросов
