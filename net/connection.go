@@ -1,11 +1,11 @@
 package net
 
 import (
-	"fmt"
-	"project/entities"
+	"encoding/json"
+	"log"
+	netmsg "project/net/messages"
 	"time"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/websocket"
 )
 
@@ -27,31 +27,22 @@ const (
 type Connection struct {
 	ws *websocket.Conn
 
-	send chan interface{}
-
-	player *entities.Player
+	send    chan *netmsg.Message
+	receive chan *netmsg.Message
 }
 
 // NewConnection - конструктор для подключения
-func NewConnection(_ws *websocket.Conn) {
+func NewConnection(_ws *websocket.Conn) *Connection {
 	connection := &Connection{
-		ws:   _ws,
-		send: make(chan interface{}),
+		ws:      _ws,
+		send:    make(chan *netmsg.Message, 256),
+		receive: make(chan *netmsg.Message, 256),
 	}
-
-	Hub.register <- connection
 
 	go connection.Reader()
 	go connection.Writer()
-}
 
-// AssignToPlayer - присваивает подключению игрока (entities -> Player)
-func (c *Connection) AssignToPlayer(_player *entities.Player) {
-	if _player == nil {
-		panic("Connection - Player can't be nil")
-	}
-
-	c.player = _player
+	return connection
 }
 
 // Writer - ...
@@ -79,7 +70,7 @@ func (c *Connection) Writer() {
 // Reader - ...
 func (c *Connection) Reader() {
 	defer func() {
-		Hub.unregister <- c
+		c.Close()
 	}()
 
 	// c.ws.SetReadLimit(maxMessageSize)
@@ -87,30 +78,20 @@ func (c *Connection) Reader() {
 	// c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
 	for {
-		_, message, err := c.ws.ReadMessage()
+		_, raw, err := c.ws.ReadMessage()
 		if err != nil {
 			break
 		}
 
-		msg, err := simplejson.NewJson([]byte(message))
+		var message netmsg.Message
+		err = json.Unmarshal(raw, &message)
 		if err != nil {
-			fmt.Println("Can't parse the message:", string(message))
+			log.Println("Can't parse the message", err)
 			continue
 		}
 
-		c.processMessage(msg)
+		c.receive <- &message
 	}
-}
-
-func (c *Connection) processMessage(msg *simplejson.Json) {
-	method, err := msg.Get("method").String()
-
-	if len(method) < 1 || err != nil {
-		fmt.Println("Method cannot be nil:", msg)
-		return
-	}
-
-	router.Dispatch(method, msg, c)
 }
 
 // Close - ...
@@ -119,8 +100,9 @@ func (c *Connection) Close() {
 	// Close send channel
 	close(c.send)
 
+	// Close receive channel
+	close(c.receive)
+
 	// Close the websocket
 	c.ws.Close()
-
-	c.player = nil
 }

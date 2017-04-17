@@ -1,8 +1,12 @@
-hash: 0e607a99a5c19d4588589739b2c0c8eac1730b5f53b52affd479095d9f8d22ff
-updated: 2017-04-04T21:24:02.596513408+03:00
+hash: 491ce338cbf0c6e580f1f487b839a962c16b13a4c007d4868b2ddcfaad709a63
+updated: 2017-04-15T21:40:56.687421509+03:00
 imports:
 - name: github.com/bitly/go-simplejson
   version: aabad6e819789e569bd6aabf444c935aa9ba1e44
 - name: github.com/gorilla/websocket
   version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
+- name: github.com/JamesMilnerUK/quadtree-go
+  version: d3a0959f67c694a354ddc37567327383e0a36427
+- name: github.com/lucasb-eyer/go-colorful
+  version: c900de9dbbc73129068f5af6a823068fc5f2308c
 testImports: []

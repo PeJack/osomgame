@@ -26,21 +26,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add connection
-	NewConnection(ws)
+	connection := NewConnection(ws)
+
+	// Add client
+	NewClient(connection)
 }
 
 // Listen - слушать изменения по указанному порту
 func Listen(port int) {
-	GenerateRoutes()
 	helpers.LevelHelper.Generate()
-
-	go Hub.run()
 
 	http.Handle("/", http.FileServer(http.Dir("./resources")))
 	http.HandleFunc("/ws", handler)
 
+	go Hub.run()
 	fmt.Printf("Server started at port :%v\n", port)
-
 	err := http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
