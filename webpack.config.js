@@ -2,12 +2,12 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-    context: path.resolve(__dirname, './resources/new_js'),
+    context: path.resolve(__dirname, './resources/js'),
     entry: {
         app: './main.js'
     },
     output: {
-        path: path.resolve(__dirname, './resources/new_js'),
+        path: path.resolve(__dirname, './resources/build'),
         filename: '[name].bundle.js',
     },
     module: {

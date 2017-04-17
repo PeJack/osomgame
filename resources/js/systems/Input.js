@@ -29,22 +29,23 @@ export class Input {
         switch (code) {
             case 32:
                 key = 'SPACE';
+                this.actionCreator.createAction(key, status,'way');
                 break;
             case 37:
                 key = 'LEFT';
-                this.actionCreator.createAction("LEFT",'','way');
+                this.actionCreator.createAction(key, status,'way');
                 break;
             case 38:
                 key = 'UP';
-                this.actionCreator.createAction("UP",'','way');
+                this.actionCreator.createAction(key, status,'way');
                 break;
             case 39:
                 key = 'RIGHT';
-                this.actionCreator.createAction("RIGHT",'','way');
+                this.actionCreator.createAction(key, status,'way');
                 break;
             case 40:
                 key = 'DOWN';
-                this.actionCreator.createAction("DOWN",'','way');
+                this.actionCreator.createAction(key, status,'way');
                 break;
             default:
                 // Convert ASCII codes to letters

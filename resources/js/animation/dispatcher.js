@@ -1,9 +1,9 @@
 import Rx from 'rxjs/Rx';
 
-export class ActionCreator {
+export class Dispatcher{
     constructor(reducer) {
         this.reducer = reducer;
-        this.way = Rx.Subject();
+        this.way = new Rx.Subject();
     }
 
     createAction(type, payload, property) {
@@ -13,7 +13,7 @@ export class ActionCreator {
         };
 
         this.reducer.dispatch(action, property).subscribe(direction => {
-            this.way.onNext(direction)
+            this.way.next(direction);
         })
     }
 

@@ -3,7 +3,7 @@ import {Input} from './systems/Input';
 import {Canvas} from './graph/canvas';
 import {GameLoop} from './GameLoop';
 import {Player} from './entities/Player';
-import {ActionCreator} from './animation/action.creator';
+import {Dispatcher} from './animation/dispatcher';
 import {IndexReducer} from './animation/reducer/index.reducer';
 
 window.onbeforeunload = function() {
@@ -42,7 +42,21 @@ class Backend {
             request[entityType] = entity;
         }
 
-        let jsonRequest = JSON.stringify(request);
+        // let jsonRequest = JSON.stringify(request);
+        // use strict не позволяет приводить к строке
+        // объекты вида  var a = {}; a.b = a;
+        // решение:
+        // http://stackoverflow.com/questions/11616630/json-stringify-avoid-typeerror-converting-circular-structure-to-json
+        let cache = [];
+        let jsonRequest = JSON.stringify(request, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (cache.indexOf(value) !== -1) {
+                    return;
+                }
+                cache.push(value);
+            }
+            return value;
+        });
 
         this.ws.send(jsonRequest);
     }
@@ -69,7 +83,7 @@ class Backend {
 export class MainApp {
     
     constructor(db) {
-        this.actionCreator = new ActionCreator(new IndexReducer());
+        this.dispatcher = new Dispatcher(new IndexReducer());
 
         this.db = db;
         this.wsurl = "ws://127.0.0.1:8080/ws";
@@ -114,15 +128,14 @@ export class MainApp {
                     resp.player.Width,
                     resp.player.Height,
                     resp.player.Speed,
-                    this.actionCreator
+                    this.dispatcher
                 );
                 
                 this.db.setPlayer(p);
-                this.input = new Input(this.actionCreator);
+                this.input = new Input(this.dispatcher);
             }
 
             this.gameLoop = new GameLoop(
-                this.canvas,
                 this.canvas.context,
                 this.input,
                 this.backend,
@@ -186,6 +199,6 @@ export class MainApp {
     }
 
     init() {
-        this.canvas = new Canvas(this.backend, this.settings, this.db.player, this.actionCreator);
+        this.canvas = new Canvas(this.backend, this.settings, this.db.player, this.dispatcher);
     }
 }

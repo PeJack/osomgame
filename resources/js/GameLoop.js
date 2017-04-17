@@ -5,7 +5,7 @@
 // 2) переписать хендлер управления (handleInput);
 // 3) пофиксить баг с ускорением персонажа при присоединении нового игрока;
 export class GameLoop {
-    constructor(canvas, context, input, backend, db, settings) {
+    constructor(context, input, backend, db, settings) {
         this.backend = backend;
         this.canvas = document.getElementById("gameWindow");
         this.context = this.canvas.getContext("2d");

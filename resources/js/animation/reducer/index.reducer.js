@@ -16,16 +16,17 @@ export class IndexReducer {
     reducer(action) {
         switch (action.type) {
             case ("LEFT"):
-                this.state.way = "left";
+                this.state.way.left = action.payload;
                 break;
             case ("RIGHT"):
-                this.state.way = "right";
+                this.state.way.right = action.payload;
                 break;
+            case("SPACE"):
             case ("UP"):
-                this.state.way = "top";
+                this.state.way.up = action.payload;
                 break;
             case ("DOWN"):
-                this.state.way = "bottom";
+                this.state.way.down = action.payload;
                 break;
         }
     }
