@@ -7,7 +7,7 @@ module.exports = {
     entry: "./src/index.ts",
     output: {
         filename: "bundle.js",
-        path: path.resolve('./assets/')
+        path: path.resolve('./build/')
     },
     resolve: {
         extensions: ["", ".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
