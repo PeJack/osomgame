@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const LiveReloadPlugin = require('webpack-livereload-plugin');
 
 module.exports = {
     context: path.resolve(__dirname, './resources/js'),
@@ -22,4 +23,7 @@ module.exports = {
             },
         ],
     },
+    plugins: [
+        new LiveReloadPlugin()
+    ]
 };

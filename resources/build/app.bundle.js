@@ -6784,34 +6784,32 @@ var Player = exports.Player = function () {
     }, {
         key: 'getVector',
         value: function getVector() {
-            var _this = this;
-
-            this.dispatcher.way.subscribe(function (way) {
-                var x1 = +way.right;
-                var x2 = -way.left || 0;
-
-                var y1 = +way.up;
-                var y2 = -way.down || 0;
-
-                var newVector = { x: x1 + x2, y: y1 + y2 };
-
-                for (var cord in _this.vector) {
-                    if (_this.vector.x > 10) {
-                        _this.vector.x = 10;
-                    } else if (_this.vector.x < -10) {
-                        _this.vector.x = -10;
-                    } else if (_this.vector.y > 2) {
-                        _this.vector.y = 2;
-                    } else if (_this.vector.y < -2) {
-                        _this.vector.y = -2;
-                    }
-
-                    _this.vector[cord] += newVector[cord];
-                }
-                console.log(_this.vector);
-                _this.intervalTime = 10;
-                _this.downGradeTimeoutter();
-            });
+            // this.dispatcher.way.subscribe((way) => {
+            //     let x1 = +way.right;
+            //     let x2 = -way.left || 0;
+            //
+            //     let y1 = +way.up;
+            //     let y2 = -way.down || 0;
+            //
+            //     let newVector = {x: x1 + x2, y: y1 + y2};
+            //
+            //     for (let cord in this.vector) {
+            //         if (this.vector.x > 10) {
+            //             this.vector.x = 10;
+            //         } else if (this.vector.x < -10) {
+            //             this.vector.x = -10;
+            //         } else if (this.vector.y > 2) {
+            //             this.vector.y = 2;
+            //         } else if (this.vector.y < -2) {
+            //             this.vector.y = -2;
+            //         }
+            //
+            //         this.vector[cord] += newVector[cord];
+            //     }
+            //     console.log(this.vector);
+            //     this.intervalTime = 10;
+            //     this.downGradeTimeoutter()
+            // })
         }
     }, {
         key: 'downGradeVector',
@@ -6828,14 +6826,14 @@ var Player = exports.Player = function () {
     }, {
         key: 'downGradeTimeoutter',
         value: function downGradeTimeoutter() {
-            var _this2 = this;
+            var _this = this;
 
             setInterval(function () {
-                _this2.vector.x--;
-                _this2.vector.y--;
-                _this2.intervalTime--;
-                console.log(_this2.intervalTime);
-                _this2.checkInterval();
+                _this.vector.x--;
+                _this.vector.y--;
+                _this.intervalTime--;
+                console.log(_this.intervalTime);
+                _this.checkInterval();
             }, 200);
         }
     }, {

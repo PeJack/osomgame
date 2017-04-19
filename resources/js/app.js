@@ -80,6 +80,7 @@ class Backend {
     };
     
 }
+
 export class MainApp {
     
     constructor(db) {

@@ -45,32 +45,32 @@ export class Player {
     }
 
     getVector() {
-        this.dispatcher.way.subscribe((way) => {
-            let x1 = +way.right;
-            let x2 = -way.left || 0;
-
-            let y1 = +way.up;
-            let y2 = -way.down || 0;
-
-            let newVector = {x: x1 + x2, y: y1 + y2};
-
-            for (let cord in this.vector) {
-                if (this.vector.x > 10) {
-                    this.vector.x = 10;
-                } else if (this.vector.x < -10) {
-                    this.vector.x = -10;
-                } else if (this.vector.y > 2) {
-                    this.vector.y = 2;
-                } else if (this.vector.y < -2) {
-                    this.vector.y = -2;
-                }
-
-                this.vector[cord] += newVector[cord];
-            }
-            console.log(this.vector);
-            this.intervalTime = 10;
-            this.downGradeTimeoutter()
-        })
+        // this.dispatcher.way.subscribe((way) => {
+        //     let x1 = +way.right;
+        //     let x2 = -way.left || 0;
+        //
+        //     let y1 = +way.up;
+        //     let y2 = -way.down || 0;
+        //
+        //     let newVector = {x: x1 + x2, y: y1 + y2};
+        //
+        //     for (let cord in this.vector) {
+        //         if (this.vector.x > 10) {
+        //             this.vector.x = 10;
+        //         } else if (this.vector.x < -10) {
+        //             this.vector.x = -10;
+        //         } else if (this.vector.y > 2) {
+        //             this.vector.y = 2;
+        //         } else if (this.vector.y < -2) {
+        //             this.vector.y = -2;
+        //         }
+        //
+        //         this.vector[cord] += newVector[cord];
+        //     }
+        //     console.log(this.vector);
+        //     this.intervalTime = 10;
+        //     this.downGradeTimeoutter()
+        // })
     }
 
     downGradeVector() {
