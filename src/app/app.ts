@@ -1,12 +1,12 @@
-export class MainApp {
-    public dataModifer: string = 'works';
+import {RenderManager} from './render/render';
 
-    constructor(data: string) {
-        this.dataModifer += data;
-    }
+export class App {
+    public renderManager: any;
 
-    showData(data = this.dataModifer): string {
-        let newData = this.dataModifer.toUpperCase();
-        return newData;
+    constructor() {
+        this.renderManager = new RenderManager();
+        this.renderManager.start();
+        this.renderManager.bufferInit();
+        this.renderManager.run();
     }
 }
