@@ -6,10 +6,10 @@ import (
 	"log"
 	"sync"
 
-	"project/helpers"
-	netmsg "project/net/messages"
-	"project/physics"
-	"project/world"
+	"project/server/helpers"
+	netmsg "project/server/net/messages"
+	"project/server/physics"
+	"project/server/world"
 )
 
 // Client - прослойка между игроком и вебсокетом
@@ -85,7 +85,7 @@ func (c *Client) run() {
 
 func (c *Client) processMessage(message *netmsg.Message) {
 	switch message.Type {
-	case "getState":
+	case "getstate":
 		state := Hub.history.CurrentState()
 		c.SendUpdate(state)
 	}

@@ -2,7 +2,7 @@ package world
 
 import (
 	"log"
-	"project/entities"
+	"project/server/entities"
 )
 
 // GameState - статус игрового мира

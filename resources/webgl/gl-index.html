@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Test webgl</title>
+	<script>
+	    window.redraw = function() {
+	    	var canvas = document.getElementById("glcanvas");
+
+	    	canvas.width = window.innerWidth;
+	    	canvas.height = window.innerHeight;
+	    }
+	</script>
+</head>
+
+<body onload="redraw();" onresize="redraw()">
+	<div id="loading">Загрузка, пожалуйста, подождите...</div>
+	<canvas oncontextmenu="return false;" id="glcanvas" style="border: none;" width="800" height="600"></canvas>
+</body>
+
+<script type="text/javascript" src="app.bundle.js"></script>
+</html>
