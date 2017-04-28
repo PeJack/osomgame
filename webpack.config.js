@@ -13,16 +13,16 @@ module.exports = {
     module: {
         rules: [
             {
-                test: [/\.fs$/, /\.vs$/, /\.js$/],
-                use: 'raw-loader'
-            },
-            {
                 test: /\.js$/,
                 exclude: [/node_modules/],
                 use: [{
                     loader: 'babel-loader',
                     options: { presets: ['es2015'] }
                 }],
+            },
+            {
+                test: [/\.fs$/, /\.vs$/],
+                use: 'raw-loader'
             }
         ],
     },
@@ -30,10 +30,5 @@ module.exports = {
         modules: [
           path.resolve(__dirname, './resources/webgl')
         ]
-    },
-    devServer: {
-        contentBase: path.join(__dirname, "./resources/webgl"),
-        port: 8080,
-        stats: 'errors-only'
-    },
+    }
 };

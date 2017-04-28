@@ -46,12 +46,12 @@ export class Game {
 		this.gameLoop = () => {
 			window.requestAnimFrame(this.gameLoop);
 			this.display();
-		};
+		}
 
 		this.gameLoop();
     }
 
-	goToLevel(num) {
+	 goToLevel(num) {
 		this.loading.innerHTML = "Загрузка, пожалуйста, подождите...";
 
 		this.dungeonObj = new DungeonConverter(this.level);
