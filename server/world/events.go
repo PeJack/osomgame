@@ -2,8 +2,8 @@ package world
 
 import (
 	"log"
-	"project/entities"
-	"project/physics"
+	"project/server/entities"
+	"project/server/physics"
 )
 
 // GameEvent - базовое событие

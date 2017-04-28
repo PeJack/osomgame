@@ -1,6 +1,6 @@
 package entities
 
-import "project/physics"
+import "project/server/physics"
 
 // Player - игрок
 type Player struct {

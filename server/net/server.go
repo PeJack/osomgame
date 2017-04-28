@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"project/helpers"
+	"project/server/helpers"
 
 	"github.com/gorilla/websocket"
 )

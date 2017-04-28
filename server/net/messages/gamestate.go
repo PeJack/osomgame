@@ -1,6 +1,6 @@
 package messages
 
-import "project/world"
+import "project/server/world"
 
 // GameStatePack - состояние игрового мира
 type GameStatePack struct {

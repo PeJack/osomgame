@@ -1,6 +1,6 @@
 package messages
 
-import "project/world"
+import "project/server/world"
 
 // InitialPack - пакет данных для инициализации
 type InitialPack struct {

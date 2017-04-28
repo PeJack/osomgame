@@ -1,8 +1,8 @@
 package helpers
 
 import (
-	"project/args"
-	"project/entities"
+	"project/server/args"
+	"project/server/entities"
 )
 
 // LevelHelper - хелпер для создания уровней

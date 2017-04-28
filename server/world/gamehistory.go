@@ -2,7 +2,7 @@ package world
 
 import (
 	"container/list"
-	"project/helpers"
+	"project/server/helpers"
 	"sync"
 )
 

@@ -4,9 +4,9 @@ import (
 	"math"
 	"time"
 
-	"project/helpers"
-	"project/physics"
-	"project/world"
+	"project/server/helpers"
+	"project/server/physics"
+	"project/server/world"
 )
 
 const (

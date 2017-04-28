@@ -3,7 +3,8 @@ package net
 import (
 	"encoding/json"
 	"log"
-	netmsg "project/net/messages"
+	"project/server/helpers"
+	netmsg "project/server/net/messages"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -88,6 +89,11 @@ func (c *Connection) Reader() {
 		if err != nil {
 			log.Println("Can't parse the message", err)
 			continue
+		}
+
+		if message.Type == "getstate" {
+			// ответ на getstate моментально, до прочтения сообщения
+			c.send <- &netmsg.Message{Type: "getstate", Time: helpers.MakeTimestamp()}
 		}
 
 		c.receive <- &message
