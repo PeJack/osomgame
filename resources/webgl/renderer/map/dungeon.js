@@ -264,7 +264,6 @@ export var Dungeon = function(tileDim, roomDim, roomMinSize) {
 			for (var j=0; j<this.tileDim[1]; j++)
 				str += this.tiles[i][j];
 		}
-		console.log(str);
 	}
 	this.generate();
 };

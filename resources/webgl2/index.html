@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Test webgl</title>
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script type="text/javascript" src="./vendor/three.min.js"></script>
+	<script type="text/javascript" src="./vendor/cannon.js"></script>
+	<script type="text/javascript" src="./helpers.js"></script>
+
+	<style>
+		body {
+			color: #fff;
+			font-family:Monospace;
+			font-size:13px;
+			text-align:center;
+			background-color: #fff;
+			margin: 0px;
+			overflow: hidden;
+		}
+	</style>	
+
+	<script>
+	    window.redraw = function() {
+	    	var canvas = document.getElementById("glcanvas");
+
+	    	canvas.width = window.innerWidth;
+	    	canvas.height = window.innerHeight;
+	    }
+	</script>
+</head>
+
+<body onload="redraw();" onresize="redraw()">
+	<canvas style="display: none; margin-right: 0px; padding-left: 600px;  opacity: 0.5; position: absolute;" id="glcanvas" width="300" height="300"></canvas>
+	<div id="container"></div>
+</body>
+
+<script type="text/javascript" src="app.bundle.js"></script>
+
+</html>

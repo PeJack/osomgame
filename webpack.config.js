@@ -2,13 +2,14 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-    context: path.resolve(__dirname, './resources/webgl'),
+    context: path.resolve(__dirname, './resources/webgl2'),
     entry: {
         app: './app.js'
     },
     output: {
-        path: path.resolve(__dirname, './resources/webgl'),
+        path: path.resolve(__dirname, './resources/webgl2'),
         filename: '[name].bundle.js',
+        library: '[name]'
     },
     module: {
         rules: [
@@ -28,7 +29,8 @@ module.exports = {
     },
     resolve: {
         modules: [
-          path.resolve(__dirname, './resources/webgl')
+          path.resolve(__dirname, './resources/webgl2'),
+          path.resolve(__dirname, 'node_modules')
         ]
     }
 };

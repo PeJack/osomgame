@@ -62,6 +62,7 @@ export class Ground {
 	    	y < 0 || y >= this.cubes[z].length ||
 	    	x < 0 || x >= this.cubes[z][y].length)
 	    	return true;
+
 	    return this.cubes[z][y][x];
 	};
 
@@ -72,6 +73,7 @@ export class Ground {
 	    this.texCoords = [];
 	    this.indices = [];
 	    this.baseIndex = 0;
+		
 	    // Test for hidden faces and add blocks
 	    for (var z=0; z<dungeon.length; z++) {
 	    	for (var y=0; y<dungeon[z].length; y++) {

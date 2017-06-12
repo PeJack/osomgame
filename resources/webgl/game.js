@@ -16,40 +16,54 @@ export class Game {
     constructor() {
 		this.counter = 0;
 		this.loading = document.getElementById("loading");
+        this.groundTexture = new TextureAtlas("src/img/ldfaithful.png", 8);
+		this.characterTexture = new TextureAtlas("src/img/oryx.png", 8);
 
-        this.textureAtlas = new TextureAtlas("src/img/ldfaithful.png", 8);
-		this.textureAtlas.sprites = new TextureAtlas("src/img/oryx.png", 8);
+		this.loadGame = () => {
+			if (!this.groundTexture.texture) {		
+				window.setTimeout(this.loadGame, 100);
+				return;
+			}
 
-		this.ground = new Ground(this.textureAtlas);
-		this.level = new Level([0.1,0.1,0.0],[2,3,3,3,3,3],[2,3],[40,40],[4,4],[5,5]);
+			if (!this.characterTexture.texture) {			
+				window.setTimeout(this.loadGame, 100);
+				return;
+			}
 
-		this.camera = new Camera();
+			this.ground = new Ground(this.groundTexture);
+			this.level = new Level([0.1,0.1,0.0],[2,3,3,3,3,3],[2,3],[40,40],[4,4],[5,5]);
 
-		this.sprites = new Sprites(this.textureAtlas.sprites);
-		this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
+			this.camera = new Camera();
 
-		this.player = this.sprites.sprites[0];
+			this.sprites = new Sprites(this.characterTexture);
 
-		this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,1]);
-		this.sprites.sprites[1].maxSpeed *= 0.8;
+			this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 
-		this.sprites.update();
-		
-		this.input = new Input();
-		this.data = new Data();
+			this.player = this.sprites.sprites[0];
 
-		this.lights = [];
-		this.lights[0] = new Light([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);		
+			this.sprites.update();
 
-		this.goToLevel(0);
+			this.input = new Input();
+			this.data = new Data();
 
-		this.gameLoop = () => {
-			window.requestAnimFrame(this.gameLoop);
-			this.display();
+			this.lights = [];
+			this.lights[0] = new Light([1.0, 0.5, 0.0], [0,5,1], [0.3, 0.1, 0.05]);		
+
+			this.goToLevel(0);
+
+			this.gameLoop = () => {
+				window.requestAnimFrame(this.gameLoop);
+				this.display();
+				this.input.update();
+			}
+
+			this.gameLoop();
 		}
 
-		this.gameLoop();
+		this.loadGame();
     }
+
+
 
 	 goToLevel(num) {
 		this.loading.innerHTML = "Загрузка, пожалуйста, подождите...";
@@ -65,7 +79,7 @@ export class Game {
 		this.ground.generate(this.dungeonObj.cubes);
 
 		this.player.pos = this.centerXY(this.dungeonObj.upstairs);
-		this.sprites.sprites[1].pos = this.centerXY(this.dungeonObj.upstairs);
+
 		this.sprites.update();
 		this.loading.innerHTML = "Уровень " + num + 1;
 	}
@@ -111,10 +125,11 @@ export class Game {
 
 	handleInputs() {
 		var inputMask = 0;
-		if (this.input.isPressed(87)) inputMask += 1; // W
-		if (this.input.isPressed(65)) inputMask += 2; // A
-		if (this.input.isPressed(83)) inputMask += 4; // S
-		if (this.input.isPressed(68)) inputMask += 8; // D
+
+		if (this.input.isDown(87)) inputMask += 1; // W
+		if (this.input.isDown(65)) inputMask += 2; // A
+		if (this.input.isDown(83)) inputMask += 4; // S
+		if (this.input.isDown(68)) inputMask += 8; // D
 
 		switch(inputMask) {
 		case  1: this.player.turnAndMove(this.ground, 0); break;
@@ -127,7 +142,7 @@ export class Game {
 		case 12: this.player.flipped = 0; this.player.turnAndMove(this.ground, 5/4*Math.PI); break;
 		}
 
-		if (this.input.isPressed("RIGHT_MOUSE")) {
+		if (this.input.isDown("RIGHT_MOUSE")) {
 			var angleChange = [
 				-this.input.getMousePosition().y * this.data.rotateSpeed, 
 				0, 
@@ -156,6 +171,7 @@ export class Game {
 		gl.useProgram(this.data.sprites.program);
 		this.data.world.m.vMatrix = this.camera.matrix;
 
+		// Orientation of character about camera
 		this.sprites.sprites[0].theta = this.camera.theta[2];
 		this.sprites.update();
 
@@ -194,7 +210,7 @@ export class Game {
 
 		this.lights[0].position = this.player.pos.slice(0);
 		this.lights[0].position[2] += 2;
-		this.sprites.sprites[1].moveToward(this.ground, this.player.pos);
+
 		this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 		this.camera.updateMatrix(this.ground.cubes);
 

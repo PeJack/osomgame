@@ -149,7 +149,6 @@ export class Sprites {
 		}
 
 		var st = this.textureAtlas.getST(tileNum);
-
 		this.texCoords = this.texCoords.concat(
 			st[2], st[1], 
 			st[0], st[1], 

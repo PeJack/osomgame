@@ -93,6 +93,7 @@ class MouseMoveListener {
         this._bindings = [];
         this._mousePosition;
         this._scroll;
+        this._mouse = {x: 0, y: 0};
 
         let self = this;
         let mousewheelevent = (/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel";
@@ -102,8 +103,13 @@ class MouseMoveListener {
           let elementPosition = getElementPosition(canvas);
 
           self._mousePosition = {
-            x: absoluteMousePosition.x - elementPosition.x,
-            y: absoluteMousePosition.y - elementPosition.y
+            x: e.clientX - self._mouse.x,
+            y: e.clientY - self._mouse.y
+          };
+
+          self._mouse = {
+            x: e.clientX, 
+            y: e.clientY
           };
         }, false);
 
@@ -117,9 +123,9 @@ class MouseMoveListener {
     }
 
     mousewheel(e) {
-		let event = window.event || e;
-		this._scroll = event.detail ? event.detail : -event.wheelDelta/120;
-	}
+		  let event = window.event || e;
+		  this._scroll = event.detail ? event.detail : -event.wheelDelta/120;
+	  }
 
     getMousePosition() {
       return this._mousePosition;

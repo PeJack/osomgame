@@ -4619,39 +4619,51 @@ var Game = exports.Game = function () {
 
 		this.counter = 0;
 		this.loading = document.getElementById("loading");
+		this.groundTexture = new _texture.TextureAtlas("src/img/ldfaithful.png", 8);
+		this.characterTexture = new _texture.TextureAtlas("src/img/oryx.png", 8);
 
-		this.textureAtlas = new _texture.TextureAtlas("src/img/ldfaithful.png", 8);
-		this.textureAtlas.sprites = new _texture.TextureAtlas("src/img/oryx.png", 8);
+		this.loadGame = function () {
+			if (!_this.groundTexture.texture) {
+				window.setTimeout(_this.loadGame, 100);
+				return;
+			}
 
-		this.ground = new _ground.Ground(this.textureAtlas);
-		this.level = new _level.Level([0.1, 0.1, 0.0], [2, 3, 3, 3, 3, 3], [2, 3], [40, 40], [4, 4], [5, 5]);
+			if (!_this.characterTexture.texture) {
+				window.setTimeout(_this.loadGame, 100);
+				return;
+			}
 
-		this.camera = new _camera.Camera();
+			_this.ground = new _ground.Ground(_this.groundTexture);
+			_this.level = new _level.Level([0.1, 0.1, 0.0], [2, 3, 3, 3, 3, 3], [2, 3], [40, 40], [4, 4], [5, 5]);
 
-		this.sprites = new _sprite.Sprites(this.textureAtlas.sprites);
-		this.sprites.addSprite(Math.floor(Math.random() * 256), [0, 0, 0]);
+			_this.camera = new _camera.Camera();
 
-		this.player = this.sprites.sprites[0];
+			_this.sprites = new _sprite.Sprites(_this.characterTexture);
 
-		this.sprites.addSprite(Math.floor(Math.random() * 256), [0, 0, 1]);
-		this.sprites.sprites[1].maxSpeed *= 0.8;
+			_this.sprites.addSprite(Math.floor(Math.random() * 256), [0, 0, 0]);
 
-		this.sprites.update();
+			_this.player = _this.sprites.sprites[0];
 
-		this.input = new _input.Input();
-		this.data = new _data.Data();
+			_this.sprites.update();
 
-		this.lights = [];
-		this.lights[0] = new _light.Light([1.0, 0.5, 0.0], [0, 0, 1], [0.3, 0.1, 0.05]);
+			_this.input = new _input.Input();
+			_this.data = new _data.Data();
 
-		this.goToLevel(0);
+			_this.lights = [];
+			_this.lights[0] = new _light.Light([1.0, 0.5, 0.0], [0, 5, 1], [0.3, 0.1, 0.05]);
 
-		this.gameLoop = function () {
-			window.requestAnimFrame(_this.gameLoop);
-			_this.display();
+			_this.goToLevel(0);
+
+			_this.gameLoop = function () {
+				window.requestAnimFrame(_this.gameLoop);
+				_this.display();
+				_this.input.update();
+			};
+
+			_this.gameLoop();
 		};
 
-		this.gameLoop();
+		this.loadGame();
 	}
 
 	_createClass(Game, [{
@@ -4666,7 +4678,7 @@ var Game = exports.Game = function () {
 			this.ground.generate(this.dungeonObj.cubes);
 
 			this.player.pos = this.centerXY(this.dungeonObj.upstairs);
-			this.sprites.sprites[1].pos = this.centerXY(this.dungeonObj.upstairs);
+
 			this.sprites.update();
 			this.loading.innerHTML = "Уровень " + num + 1;
 		}
@@ -4716,10 +4728,11 @@ var Game = exports.Game = function () {
 		key: 'handleInputs',
 		value: function handleInputs() {
 			var inputMask = 0;
-			if (this.input.isPressed(87)) inputMask += 1; // W
-			if (this.input.isPressed(65)) inputMask += 2; // A
-			if (this.input.isPressed(83)) inputMask += 4; // S
-			if (this.input.isPressed(68)) inputMask += 8; // D
+
+			if (this.input.isDown(87)) inputMask += 1; // W
+			if (this.input.isDown(65)) inputMask += 2; // A
+			if (this.input.isDown(83)) inputMask += 4; // S
+			if (this.input.isDown(68)) inputMask += 8; // D
 
 			switch (inputMask) {
 				case 1:
@@ -4740,7 +4753,7 @@ var Game = exports.Game = function () {
 					this.player.flipped = 0;this.player.turnAndMove(this.ground, 5 / 4 * Math.PI);break;
 			}
 
-			if (this.input.isPressed("RIGHT_MOUSE")) {
+			if (this.input.isDown("RIGHT_MOUSE")) {
 				var angleChange = [-this.input.getMousePosition().y * this.data.rotateSpeed, 0, this.input.getMousePosition().x * this.data.rotateSpeed];
 				this.camera.changeAngle(angleChange);
 			}
@@ -4766,6 +4779,7 @@ var Game = exports.Game = function () {
 			_webgl.gl.useProgram(this.data.sprites.program);
 			this.data.world.m.vMatrix = this.camera.matrix;
 
+			// Orientation of character about camera
 			this.sprites.sprites[0].theta = this.camera.theta[2];
 			this.sprites.update();
 
@@ -4805,7 +4819,7 @@ var Game = exports.Game = function () {
 
 			this.lights[0].position = this.player.pos.slice(0);
 			this.lights[0].position[2] += 2;
-			this.sprites.sprites[1].moveToward(this.ground, this.player.pos);
+
 			this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 			this.camera.updateMatrix(this.ground.cubes);
 
@@ -5282,7 +5296,6 @@ var Dungeon = exports.Dungeon = function Dungeon(tileDim, roomDim, roomMinSize) 
 				str += this.tiles[i][j];
 			}
 		}
-		console.log(str);
 	};
 	this.generate();
 };
@@ -5369,6 +5382,7 @@ var Ground = exports.Ground = function () {
 			y = Math.floor(y);
 			z = Math.floor(z);
 			if (z < 0 || z >= this.cubes.length || y < 0 || y >= this.cubes[z].length || x < 0 || x >= this.cubes[z][y].length) return true;
+
 			return this.cubes[z][y][x];
 		}
 	}, {
@@ -5380,6 +5394,7 @@ var Ground = exports.Ground = function () {
 			this.texCoords = [];
 			this.indices = [];
 			this.baseIndex = 0;
+
 			// Test for hidden faces and add blocks
 			for (var z = 0; z < dungeon.length; z++) {
 				for (var y = 0; y < dungeon[z].length; y++) {
@@ -5669,6 +5684,7 @@ var MouseMoveListener = function () {
     this._bindings = [];
     this._mousePosition;
     this._scroll;
+    this._mouse = { x: 0, y: 0 };
 
     var self = this;
     var mousewheelevent = /Firefox/i.test(navigator.userAgent) ? "DOMMouseScroll" : "mousewheel";
@@ -5678,8 +5694,13 @@ var MouseMoveListener = function () {
       var elementPosition = getElementPosition(_canvas.canvas);
 
       self._mousePosition = {
-        x: absoluteMousePosition.x - elementPosition.x,
-        y: absoluteMousePosition.y - elementPosition.y
+        x: e.clientX - self._mouse.x,
+        y: e.clientY - self._mouse.y
+      };
+
+      self._mouse = {
+        x: e.clientX,
+        y: e.clientY
       };
     }, false);
 
@@ -6011,7 +6032,6 @@ var Sprites = exports.Sprites = function () {
 												}
 
 												var st = this.textureAtlas.getST(tileNum);
-
 												this.texCoords = this.texCoords.concat(st[2], st[1], st[0], st[1], st[0], st[3], st[2], st[3]);
 
 												this.indices.push(this.baseIndex, this.baseIndex + 1, this.baseIndex + 2, this.baseIndex, this.baseIndex + 2, this.baseIndex + 3);
@@ -6084,24 +6104,36 @@ var TextureAtlas = exports.TextureAtlas = function () {
 		key: 'loadTexture',
 		value: function loadTexture(url) {
 			var self = this;
-			self.texture = _webgl.gl.createTexture();
-			self.texture.image = new Image();
+			var texture = _webgl.gl.createTexture();
+			_webgl.gl.bindTexture(_webgl.gl.TEXTURE_2D, texture);
 
-			self.texture.image.onload = function () {
-				self.handleTexture(self.texture.image, self.texture);
+			texture.image = new Image();
+			texture.image.src = url;
+
+			texture.image.onload = function () {
+				self.handleTexture(texture.image, texture);
 			};
-			self.texture.image.src = url;
 		}
 	}, {
 		key: 'handleTexture',
 		value: function handleTexture(image, texture) {
 			_webgl.gl.bindTexture(_webgl.gl.TEXTURE_2D, texture);
 			_webgl.gl.texImage2D(_webgl.gl.TEXTURE_2D, 0, _webgl.gl.RGBA, _webgl.gl.RGBA, _webgl.gl.UNSIGNED_BYTE, image);
-			_webgl.gl.texParameteri(_webgl.gl.TEXTURE_2D, _webgl.gl.TEXTURE_MIN_FILTER, _webgl.gl.NEAREST);
+
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 			_webgl.gl.texParameteri(_webgl.gl.TEXTURE_2D, _webgl.gl.TEXTURE_MAG_FILTER, _webgl.gl.NEAREST);
-			_webgl.gl.bindTexture(_webgl.gl.TEXTURE_2D, null);
+			_webgl.gl.texParameteri(_webgl.gl.TEXTURE_2D, _webgl.gl.TEXTURE_MIN_FILTER, _webgl.gl.NEAREST);
+			_webgl.gl.texParameteri(_webgl.gl.TEXTURE_2D, _webgl.gl.TEXTURE_WRAP_S, _webgl.gl.CLAMP_TO_EDGE);
+			_webgl.gl.texParameteri(_webgl.gl.TEXTURE_2D, _webgl.gl.TEXTURE_WRAP_T, _webgl.gl.CLAMP_TO_EDGE);
+			// gl.generateMipmap( gl.TEXTURE_2D );
+
+			// gl.bindTexture(gl.TEXTURE_2D, null);
+
+
 			this.texture = texture;
 			this.imageSizePx = image.width; // width must equal height	
+
 			this.tileSizeNormalized = this.tileSizePx / this.imageSizePx;
 			this.paddingNormalized = 0.5 / this.imageSizePx;
 			this.tilesPerRow = Math.floor(this.imageSizePx / this.tileSizePx);
@@ -6116,6 +6148,7 @@ var TextureAtlas = exports.TextureAtlas = function () {
 			var stRange = [this.tileSizeNormalized * (tileNum % this.tilesPerRow) + this.paddingNormalized, this.tileSizeNormalized * Math.floor(tileNum / this.tilesPerRow) + this.paddingNormalized];
 			stRange[2] = stRange[0] + this.tileSizeNormalized - this.paddingNormalized * 1.5;
 			stRange[3] = stRange[1] + this.tileSizeNormalized - this.paddingNormalized * 1.5;
+
 			return stRange;
 		}
 	}]);
@@ -6127,7 +6160,7 @@ var TextureAtlas = exports.TextureAtlas = function () {
 /* 16 */
 /***/ (function(module, exports) {
 
-module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n"
+module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\tif (aMoving > 0.5 && offset.z < 0.5) {\n\t\t// Walking wobble animation\n\t\tfloat t = mod(1.5*uCounter/M_PI,2.0*M_PI);\n\t\tt = (abs(t-M_PI)-0.5*M_PI)*0.25;\n\t\tfloat x = offset.x;\n\t\tfloat z = offset.z;\n\t\tfloat c = cos(t);\n\t\tfloat s = sin(t);\n\t\toffset.x = x*c - z*s;\n\t\toffset.z = x*s + z*c;\n\t\tif (x < 0.0)\n\t\t\toffset.z *= 0.70;\n\t}\n\telse {\n\t\t// Idle wobble animation\n\t\tfloat t = mod(uCounter/M_PI,2.0*M_PI);\n\n\t\tvec3 mult = vec3(0.05, 0.0, 0.13);\n\t\tif (offset.x < 0.0)\n\t\t\tmult.x *= -1.0;\n\t\tif (offset.z > 0.5)\n\t\t\tmult.z *= -1.0;\n\t\telse\n\t\t\tmult.z = 0.0;\n\n\t\toffset.x += sin(t)*mult.x;\n\t\toffset.z += cos(t)*mult.z;\n\t}\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n"
 
 /***/ }),
 /* 17 */
@@ -6145,7 +6178,7 @@ module.exports = "attribute vec3 aPosition;\n\nuniform mat4 uVMatrix;\nuniform m
 /* 19 */
 /***/ (function(module, exports) {
 
-module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\t//vec3 depth = vPosition.xyz / vPosition.w;\n\t//depth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\t//depth.z *= 0.96; // Offset depth \n\t//if (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\t//shadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n"
+module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\tvec3 depth = vPosition.xyz / vPosition.w;\n\tdepth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\tdepth.z *= 0.96; // Offset depth \n\tif (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\tshadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n"
 
 /***/ }),
 /* 20 */
